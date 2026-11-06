@@ -1,0 +1,124 @@
+erDiagram
+
+    USER_ROLES ||--o{ USERS : has
+
+    RESOURCE_CATEGORIES ||--o{ RESOURCE_MODELS : categorizes
+    RESOURCE_MODELS ||--o{ RESOURCES : consists_of
+    RESOURCE_STATUS ||--o{ RESOURCES : has_status
+
+    RESOURCES ||--o{ RESOURCE_SCHEDULES : has
+    SCHEDULE_STATUS ||--o{ RESOURCE_SCHEDULES : has_status
+
+    USERS ||--o{ EQUIPMENT_BOOKINGS : creates
+    RESOURCE_SCHEDULES ||--o{ EQUIPMENT_BOOKINGS : assigned_to
+    BOOKING_STATUS ||--o{ EQUIPMENT_BOOKINGS : has_status
+
+    EQUIPMENT_BOOKINGS ||--o{ EQUIPMENT_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ EQUIPMENT_BOOKING_HISTORY : performs
+
+    EQUIPMENT_BOOKINGS ||--o{ FINES : incurs
+
+
+    USER_ROLES {
+        SMALLINT role_id PK
+        VARCHAR role_name
+    }
+
+    USERS {
+        BIGINT user_id PK
+        VARCHAR user_code
+        VARCHAR google_id
+        VARCHAR university_id
+        VARCHAR full_name
+        VARCHAR email
+        VARCHAR phone
+        TEXT password_hash
+        SMALLINT role_id FK
+        VARCHAR user_status
+        TIMESTAMP created_at
+        TIMESTAMP last_login
+    }
+
+    RESOURCE_CATEGORIES {
+        SMALLINT type_id PK
+        VARCHAR type_name
+        INTEGER max_borrow_days
+    }
+
+    RESOURCE_MODELS {
+        BIGINT model_id PK
+        VARCHAR model_name
+        SMALLINT type_id FK
+        VARCHAR manufacturer
+        TEXT specification
+    }
+
+    RESOURCE_STATUS {
+        SMALLINT resource_status_id PK
+        VARCHAR resource_status_name
+    }
+
+    RESOURCES {
+        BIGINT resource_id PK
+        VARCHAR resource_code
+        BIGINT model_id FK
+        VARCHAR location
+        INTEGER quantity
+        SMALLINT resource_status_id FK
+        TIMESTAMP created_at
+    }
+
+    SCHEDULE_STATUS {
+        SMALLINT schedule_status_id PK
+        VARCHAR schedule_status_name
+    }
+
+    RESOURCE_SCHEDULES {
+        BIGINT schedule_id PK
+        BIGINT resource_id FK
+        DATE work_date
+        TIME start_time
+        TIME end_time
+        INTEGER max_slots
+        SMALLINT schedule_status_id FK
+        TIMESTAMP created_at
+    }
+
+    BOOKING_STATUS {
+        SMALLINT booking_status_id PK
+        VARCHAR booking_status_name
+    }
+
+    EQUIPMENT_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR booking_code
+        BIGINT user_id FK
+        BIGINT schedule_id FK
+        TIMESTAMP borrow_date
+        TIMESTAMP expected_return_date
+        TIMESTAMP actual_return_date
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        TEXT borrow_purpose
+    }
+
+    BOOKING_ACTIONS {
+        SMALLINT action_id PK
+        VARCHAR action_name
+    }
+
+    EQUIPMENT_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
+
+    FINES {
+        BIGINT fine_id PK
+        BIGINT booking_id FK
+        DECIMAL fine_amount
+        VARCHAR fine_reason
+        VARCHAR fine_status
+        TIMESTAMP created_at
+    }

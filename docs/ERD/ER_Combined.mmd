@@ -1,0 +1,262 @@
+erDiagram
+
+    %% ==========================================
+    %% SHARED RELATIONSHIPS
+    %% ==========================================
+
+    USER_ROLES ||--o{ USERS : has
+
+    RESOURCE_CATEGORIES ||--o{ RESOURCES : categorizes
+    RESOURCE_STATUS ||--o{ RESOURCES : assigns_status
+
+    SCHEDULE_STATUS ||--o{ ROOM_SCHEDULES : controls
+    SCHEDULE_STATUS ||--o{ PRINTER_SCHEDULES : controls
+
+    RESOURCES ||--o{ ROOM_SCHEDULES : provides
+    RESOURCES ||--o{ PRINTER_SCHEDULES : provides
+
+
+    %% ==========================================
+    %% ROOM BOOKING MODULE
+    %% ==========================================
+
+    USERS ||--o{ ROOM_BOOKINGS : creates
+    ROOM_SCHEDULES ||--o{ ROOM_BOOKINGS : schedules
+    BOOKING_STATUS ||--o{ ROOM_BOOKINGS : has_status
+
+    ROOM_BOOKINGS ||--o{ ROOM_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ ROOM_BOOKING_HISTORY : actions
+
+
+    %% ==========================================
+    %% 3D PRINTER MODULE
+    %% ==========================================
+
+    USERS ||--o{ PRINTER_BOOKINGS : creates
+    PRINTER_SCHEDULES ||--o{ PRINTER_BOOKINGS : schedules
+    BOOKING_STATUS ||--o{ PRINTER_BOOKINGS : has_status
+
+    PRINTER_BOOKINGS ||--o{ PRINTER_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ PRINTER_BOOKING_HISTORY : actions
+
+
+    %% ==========================================
+    %% EQUIPMENT BORROWING MODULE
+    %% ==========================================
+
+    USERS ||--o{ EQUIPMENT_BOOKINGS : borrows
+    RESOURCES ||--o{ EQUIPMENT_BOOKINGS : uses
+    BOOKING_STATUS ||--o{ EQUIPMENT_BOOKINGS : has_status
+
+    EQUIPMENT_BOOKINGS ||--o{ EQUIPMENT_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ EQUIPMENT_BOOKING_HISTORY : actions
+
+    EQUIPMENT_BOOKINGS ||--o{ FINES : generates
+
+
+    %% ==========================================
+    %% MAINTENANCE MODULE
+    %% ==========================================
+
+    USERS ||--o{ MAINTENANCE_BOOKINGS : reports
+    RESOURCES ||--o{ MAINTENANCE_BOOKINGS : affects
+    BOOKING_STATUS ||--o{ MAINTENANCE_BOOKINGS : has_status
+
+    MAINTENANCE_BOOKINGS ||--o{ MAINTENANCE_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ MAINTENANCE_BOOKING_HISTORY : actions
+
+    MAINTENANCE_BOOKINGS ||--o{ ATTACHMENTS : contains
+
+
+    %% ==========================================
+    %% SHARED TABLES
+    %% ==========================================
+
+    USER_ROLES {
+        SMALLINT role_id PK
+        VARCHAR role_name
+    }
+
+    USERS {
+        BIGINT user_id PK
+        VARCHAR user_code
+        VARCHAR google_id
+        VARCHAR university_id
+        VARCHAR full_name
+        VARCHAR email
+        VARCHAR phone
+        TEXT password_hash
+        SMALLINT role_id FK
+        VARCHAR user_status
+        TIMESTAMP created_at
+        TIMESTAMP last_login
+    }
+
+    RESOURCE_CATEGORIES {
+        SMALLINT type_id PK
+        VARCHAR type_name
+    }
+
+    RESOURCE_STATUS {
+        SMALLINT resource_status_id PK
+        VARCHAR resource_status_name
+    }
+
+    RESOURCES {
+        BIGINT resource_id PK
+        VARCHAR resource_code
+        VARCHAR resource_name
+        SMALLINT type_id FK
+        VARCHAR location
+        SMALLINT resource_status_id FK
+        INTEGER capacity
+        INTEGER quantity
+        TEXT description
+        TIMESTAMP created_at
+    }
+
+    SCHEDULE_STATUS {
+        SMALLINT schedule_status_id PK
+        VARCHAR schedule_status_name
+    }
+
+    BOOKING_STATUS {
+        SMALLINT booking_status_id PK
+        VARCHAR booking_status_name
+    }
+
+    BOOKING_ACTIONS {
+        SMALLINT action_id PK
+        VARCHAR action_name
+    }
+
+
+    %% ==========================================
+    %% ROOM BOOKING TABLES
+    %% ==========================================
+
+    ROOM_SCHEDULES {
+        BIGINT schedule_id PK
+        BIGINT resource_id FK
+        DATE work_date
+        TIME start_time
+        TIME end_time
+        INTEGER max_slots
+        SMALLINT schedule_status_id FK
+        TIMESTAMP created_at
+    }
+
+    ROOM_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR booking_code
+        BIGINT user_id FK
+        BIGINT schedule_id FK
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        TEXT booking_purpose
+    }
+
+    ROOM_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
+
+
+    %% ==========================================
+    %% 3D PRINTER TABLES
+    %% ==========================================
+
+    PRINTER_SCHEDULES {
+        BIGINT schedule_id PK
+        BIGINT resource_id FK
+        DATE work_date
+        TIME start_time
+        TIME end_time
+        INTEGER max_slots
+        SMALLINT schedule_status_id FK
+        TIMESTAMP created_at
+    }
+
+    PRINTER_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR booking_code
+        BIGINT user_id FK
+        BIGINT schedule_id FK
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        TEXT print_purpose
+    }
+
+    PRINTER_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
+
+
+    %% ==========================================
+    %% EQUIPMENT BORROWING TABLES
+    %% ==========================================
+
+    EQUIPMENT_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR booking_code
+        BIGINT user_id FK
+        BIGINT resource_id FK
+        TIMESTAMP borrow_date
+        TIMESTAMP expected_return_date
+        TIMESTAMP actual_return_date
+        SMALLINT booking_status_id FK
+        TEXT borrow_purpose
+    }
+
+    EQUIPMENT_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
+
+    FINES {
+        BIGINT fine_id PK
+        BIGINT booking_id FK
+        DECIMAL fine_amount
+        VARCHAR fine_reason
+        VARCHAR fine_status
+    }
+
+
+    %% ==========================================
+    %% MAINTENANCE MANAGEMENT TABLES
+    %% ==========================================
+
+    MAINTENANCE_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR booking_code
+        BIGINT user_id FK
+        BIGINT resource_id FK
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        VARCHAR repair_title
+        TEXT repair_description
+        TIMESTAMP reported_date
+        TEXT staff_note
+    }
+
+    MAINTENANCE_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
+
+    ATTACHMENTS {
+        BIGINT attachment_id PK
+        BIGINT booking_id FK
+        VARCHAR file_name
+        TEXT file_path
+        TIMESTAMP upload_date
+    }

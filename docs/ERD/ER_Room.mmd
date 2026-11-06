@@ -1,0 +1,120 @@
+erDiagram
+
+    %% ==========================================
+    %% RELATIONSHIPS
+    %% ==========================================
+
+    USER_ROLES ||--o{ USERS : has
+
+    RESOURCE_CATEGORIES ||--o{ RESOURCE_MODELS : categorizes
+    RESOURCE_MODELS ||--o{ RESOURCES : defines
+    RESOURCE_STATUS ||--o{ RESOURCES : determines
+
+    RESOURCES ||--o{ ROOM_SCHEDULES : has
+    SCHEDULE_STATUS ||--o{ ROOM_SCHEDULES : determines
+
+    USERS ||--o{ ROOM_BOOKINGS : creates
+    ROOM_SCHEDULES ||--o{ ROOM_BOOKINGS : receives
+    BOOKING_STATUS ||--o{ ROOM_BOOKINGS : determines
+
+    ROOM_BOOKINGS ||--o{ ROOM_BOOKING_HISTORY : has
+    BOOKING_ACTIONS ||--o{ ROOM_BOOKING_HISTORY : records
+
+    %% ==========================================
+    %% SHARED TABLES
+    %% ==========================================
+
+    USER_ROLES {
+        SMALLSERIAL role_id PK
+        VARCHAR role_name
+    }
+
+    USERS {
+        BIGSERIAL user_id PK
+        VARCHAR user_code UK
+        VARCHAR google_id UK
+        VARCHAR university_id
+        VARCHAR full_name
+        VARCHAR email UK
+        VARCHAR phone
+        TEXT password_hash
+        SMALLINT role_id FK
+        VARCHAR user_status
+        TIMESTAMP created_at
+        TIMESTAMP last_login
+    }
+
+    RESOURCE_CATEGORIES {
+        SMALLSERIAL type_id PK
+        VARCHAR type_name UK
+    }
+
+    RESOURCE_MODELS {
+        BIGSERIAL model_id PK
+        VARCHAR model_name
+        SMALLINT type_id FK
+        VARCHAR building
+        TEXT specification
+    }
+
+    RESOURCE_STATUS {
+        SMALLSERIAL resource_status_id PK
+        VARCHAR resource_status_name UK
+    }
+
+    RESOURCES {
+        BIGSERIAL resource_id PK
+        VARCHAR resource_code UK
+        BIGINT model_id FK
+        VARCHAR location
+        INTEGER capacity
+        SMALLINT resource_status_id FK
+        TIMESTAMP created_at
+    }
+
+    SCHEDULE_STATUS {
+        SMALLSERIAL schedule_status_id PK
+        VARCHAR schedule_status_name UK
+    }
+
+    BOOKING_STATUS {
+        SMALLSERIAL booking_status_id PK
+        VARCHAR booking_status_name UK
+    }
+
+    BOOKING_ACTIONS {
+        SMALLSERIAL action_id PK
+        VARCHAR action_name UK
+    }
+
+    %% ==========================================
+    %% ROOM BOOKING MODULE TABLES
+    %% ==========================================
+
+    ROOM_SCHEDULES {
+        BIGSERIAL schedule_id PK
+        BIGINT resource_id FK
+        DATE work_date
+        TIME start_time
+        TIME end_time
+        INTEGER max_slots
+        SMALLINT schedule_status_id FK
+        TIMESTAMP created_at
+    }
+
+    ROOM_BOOKINGS {
+        BIGSERIAL booking_id PK
+        VARCHAR booking_code UK
+        BIGINT user_id FK
+        BIGINT schedule_id FK
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        TEXT booking_purpose
+    }
+
+    ROOM_BOOKING_HISTORY {
+        BIGSERIAL history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }

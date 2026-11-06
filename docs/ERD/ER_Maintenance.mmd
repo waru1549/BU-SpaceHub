@@ -1,0 +1,106 @@
+erDiagram
+
+    %% ==========================================
+    %% RELATIONSHIP MAPPING
+    %% ==========================================
+
+    USER_ROLES ||--o{ USERS : assigns
+
+    RESOURCE_CATEGORIES ||--o{ RESOURCES : categorizes
+    RESOURCE_STATUS ||--o{ RESOURCES : defines
+
+    USERS ||--o{ MAINTENANCE_BOOKINGS : creates
+    RESOURCES ||--o{ MAINTENANCE_BOOKINGS : reported_for
+    BOOKING_STATUS ||--o{ MAINTENANCE_BOOKINGS : defines
+
+    MAINTENANCE_BOOKINGS ||--o{ ATTACHMENTS : contains
+
+    MAINTENANCE_BOOKINGS ||--o{ MAINTENANCE_BOOKING_HISTORY : records
+    BOOKING_ACTIONS ||--o{ MAINTENANCE_BOOKING_HISTORY : describes
+
+
+    %% ==========================================
+    %% SHARED TABLES
+    %% ==========================================
+
+    USER_ROLES {
+        SMALLINT role_id PK
+        VARCHAR_20 role_name UK
+    }
+
+    USERS {
+        BIGINT user_id PK
+        VARCHAR_30 user_code UK
+        VARCHAR_255 google_id UK
+        VARCHAR_20 university_id
+        VARCHAR_255 full_name
+        VARCHAR_255 email UK
+        VARCHAR_20 phone
+        TEXT password_hash
+        SMALLINT role_id FK
+        VARCHAR_20 user_status
+        TIMESTAMP created_at
+        TIMESTAMP last_login
+    }
+
+    RESOURCE_CATEGORIES {
+        SMALLINT type_id PK
+        VARCHAR_100 type_name UK
+    }
+
+    RESOURCE_STATUS {
+        SMALLINT resource_status_id PK
+        VARCHAR_100 resource_status_name UK
+    }
+
+    RESOURCES {
+        BIGINT resource_id PK
+        VARCHAR_50 resource_code UK
+        VARCHAR_255 resource_name
+        SMALLINT type_id FK
+        VARCHAR_255 location
+        SMALLINT resource_status_id FK
+        TIMESTAMP created_at
+    }
+
+    BOOKING_STATUS {
+        SMALLINT booking_status_id PK
+        VARCHAR_50 booking_status_name UK
+    }
+
+    BOOKING_ACTIONS {
+        SMALLINT action_id PK
+        VARCHAR_100 action_name UK
+    }
+
+
+    %% ==========================================
+    %% MAINTENANCE MANAGEMENT MODULE TABLES
+    %% ==========================================
+
+    MAINTENANCE_BOOKINGS {
+        BIGINT booking_id PK
+        VARCHAR_50 booking_code UK
+        BIGINT user_id FK
+        BIGINT resource_id FK
+        TIMESTAMP booking_time
+        SMALLINT booking_status_id FK
+        VARCHAR_255 repair_title
+        TEXT repair_description
+        TIMESTAMP reported_date
+    }
+
+    ATTACHMENTS {
+        BIGINT attachment_id PK
+        BIGINT booking_id FK
+        VARCHAR_255 file_name
+        TEXT file_path
+        TIMESTAMP upload_date
+    }
+
+    MAINTENANCE_BOOKING_HISTORY {
+        BIGINT history_id PK
+        BIGINT booking_id FK
+        SMALLINT action_id FK
+        TIMESTAMP action_date
+    }
