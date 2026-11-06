@@ -1,0 +1,7 @@
+{
+  "name": "crms-fe",
+  "version": "1.0.0",
+  "description": "CRMS (BU SpaceHub) Frontend",
+  "private": true,
+  "type": "module"
+}
