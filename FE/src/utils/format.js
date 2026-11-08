@@ -17,3 +17,13 @@ export const formatDate = (value) => {
   if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
 };
+
+export const formatBaht = (value) =>
+  value === null || value === undefined || value === '' ? '-' : `฿${formatNumber(value, 2)}`;
+
+// "2026-11" -> "พ.ย. 2569"
+export const formatMonth = (label) => {
+  const [y, m] = String(label).split('-').map(Number);
+  if (!y || !m) return String(label);
+  return new Date(y, m - 1, 1).toLocaleDateString('th-TH', { month: 'short', year: 'numeric' });
+};
