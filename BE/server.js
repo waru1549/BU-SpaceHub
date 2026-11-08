@@ -8,6 +8,7 @@ import { logger } from './src/utils/logger.js';
 import { AppError, notFound, errorHandler } from './src/middleware/error.middleware.js';
 import { apiLimiter } from './src/middleware/rateLimit.middleware.js';
 import authRoutes from './src/routes/auth.routes.js';
+import dashboardRoutes from './src/routes/dashboard.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +47,7 @@ app.get('/api/health/db', async (req, res) => {
 
 // --- Routes ---
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // --- ต้องอยู่ท้ายสุดเสมอ ---
 app.use(notFound);
