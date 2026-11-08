@@ -6,6 +6,7 @@ import Login from '../pages/Login.jsx';
 import RoleLogin from '../pages/RoleLogin.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import Profile from '../pages/Profile.jsx';
+import ComingSoon from '../pages/ComingSoon.jsx';
 import NotFound from '../pages/NotFound.jsx';
 import { ROLES } from '../utils/constants.js';
 
@@ -23,14 +24,20 @@ export default function AppRoutes() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
 
-          {/* ชั่วคราว: ไว้ทดสอบการกั้นตาม role (จะลบใน Step 7B) */}
+          {/* โมดูลบริการ: หน้าชั่วคราว จะแทนที่ด้วยโมดูลจริงใน Step 8-10 */}
+          <Route path="/rooms" element={<ComingSoon title="จองห้อง" step="Step 8" />} />
+          <Route path="/printers" element={<ComingSoon title="เครื่องพิมพ์ 3D" step="Step 8" />} />
+          <Route path="/equipment" element={<ComingSoon title="ยืม-คืนอุปกรณ์" step="Step 9" />} />
+          <Route path="/maintenance" element={<ComingSoon title="แจ้งซ่อม" step="Step 10" />} />
+
           <Route element={<ProtectedRoute roles={[ROLES.STAFF, ROLES.ADMIN]} />}>
-            <Route
-              path="/staff-only"
-              element={
-                <div className="rounded-xl bg-white p-6 shadow-sm">หน้านี้เฉพาะ Staff/Admin (ชั่วคราว)</div>
-              }
-            />
+            <Route path="/staff/requests" element={<ComingSoon title="คำขอรออนุมัติ" step="Step 8-10" />} />
+          </Route>
+
+          <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
+            <Route path="/admin/users" element={<ComingSoon title="จัดการผู้ใช้" step="Step 8-10" />} />
+            <Route path="/admin/resources" element={<ComingSoon title="จัดการทรัพยากร" step="Step 8-10" />} />
+            <Route path="/admin/reports" element={<ComingSoon title="รายงานระบบ" step="Step 7B-2" />} />
           </Route>
         </Route>
       </Route>
