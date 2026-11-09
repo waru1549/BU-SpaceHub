@@ -16,6 +16,11 @@ export const getMyBookings = async (params) => {
   return { rows: json.data, meta: json.meta };
 };
 
+export const getAllRoomBookings = async (params) => {
+  const json = await api.get(`/rooms/bookings?${buildListQuery(params)}`);
+  return { rows: json.data, meta: json.meta };
+};
+
 // action: 'cancel' | 'approve' | 'reject' | 'complete'
 export const changeBookingStatus = async (bookingId, action) =>
   (await api.post(`/rooms/bookings/${bookingId}/${action}`)).data;

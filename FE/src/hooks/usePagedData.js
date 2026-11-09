@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
  * fetcher(params) -> Promise<{ rows, meta }>  ต้องมี identity คงที่
  * params = { page, limit, sort, order, filters }
  */
-export function usePagedData(fetcher, { sort, order }) {
-  const [params, setParams] = useState({ page: 1, limit: 10, sort, order, filters: {} });
+export function usePagedData(fetcher, { sort, order, filters = {} }) {
+  const [params, setParams] = useState({ page: 1, limit: 10, sort, order, filters });
   const [state, setState] = useState({ rows: [], meta: null, loading: true, error: null });
   const [nonce, setNonce] = useState(0);
 

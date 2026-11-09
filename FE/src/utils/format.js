@@ -28,6 +28,21 @@ export const formatMonth = (label) => {
   return new Date(y, m - 1, 1).toLocaleDateString('th-TH', { month: 'short', year: 'numeric' });
 };
 
+// "2026-11-09T04:20:00+00:00" -> "09 พ.ย. 2569 11:20" (เวลาไทย)
+export const formatDateTime = (value) => {
+  if (!value) return '-';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString('th-TH', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  });
+};
+
 // ---- วันที่/เวลาของการจอง (วันที่เป็นข้อความ YYYY-MM-DD ไม่ผ่านเขตเวลาเครื่อง) ----
 
 // "09:00:00" -> "09:00"
