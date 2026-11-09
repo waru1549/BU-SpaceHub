@@ -7,6 +7,7 @@ import RoleLogin from '../pages/RoleLogin.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import Profile from '../pages/Profile.jsx';
 import ComingSoon from '../pages/ComingSoon.jsx';
+import Rooms from '../pages/Rooms.jsx';
 import NotFound from '../pages/NotFound.jsx';
 import { ROLES } from '../utils/constants.js';
 
@@ -25,7 +26,7 @@ export default function AppRoutes() {
           <Route path="/profile" element={<Profile />} />
 
           {/* โมดูลบริการ: หน้าชั่วคราว จะแทนที่ด้วยโมดูลจริงใน Step 8-10 */}
-          <Route path="/rooms" element={<ComingSoon title="จองห้อง" step="Step 8" />} />
+          <Route path="/rooms" element={<Rooms />} />
           <Route path="/printers" element={<ComingSoon title="เครื่องพิมพ์ 3D" step="Step 8" />} />
           <Route path="/equipment" element={<ComingSoon title="ยืม-คืนอุปกรณ์" step="Step 9" />} />
           <Route path="/maintenance" element={<ComingSoon title="แจ้งซ่อม" step="Step 10" />} />

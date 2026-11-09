@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 
-// fn ต้องเป็นฟังก์ชันที่ identity คงที่ (ประกาศนอก component)
+// fn ต้องมี identity คงที่ (ประกาศนอก component หรือห่อด้วย useCallback)
+// เมื่อ fn เปลี่ยน (พารามิเตอร์เปลี่ยน) จะโหลดใหม่และ loading = true ทันที
 export function useAsync(fn) {
-  const [state, setState] = useState({ data: null, loading: true, error: null });
+  const [state, setState] = useState({ fn: null, data: null, loading: true, error: null });
   const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false; // กันผลลัพธ์ของคำขอเก่ามาทับ
     fn()
       .then((data) => {
-        if (!cancelled) setState({ data, loading: false, error: null });
+        if (!cancelled) setState({ fn, data, loading: false, error: null });
       })
       .catch((err) => {
         if (!cancelled) {
-          setState({ data: null, loading: false, error: err.message || 'เกิดข้อผิดพลาด' });
+          setState({ fn, data: null, loading: false, error: err.message || 'เกิดข้อผิดพลาด' });
         }
       });
     return () => {
@@ -26,5 +27,12 @@ export function useAsync(fn) {
     setNonce((n) => n + 1);
   }, []);
 
-  return { ...state, reload };
+  // ผลที่ถืออยู่เป็นของพารามิเตอร์ชุดเก่า: ถือว่ากำลังโหลดและยังไม่มี error
+  const stale = state.fn !== fn;
+  return {
+    data: state.data,
+    loading: state.loading || stale,
+    error: stale ? null : state.error,
+    reload,
+  };
 }
