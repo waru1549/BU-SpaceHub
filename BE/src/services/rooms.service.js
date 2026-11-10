@@ -22,6 +22,7 @@ const CHANGE_ERRORS = {
   ALREADY_STARTED: [409, 'การจองนี้เริ่มไปแล้ว ไม่สามารถยกเลิกได้'],
   NOT_STARTED: [409, 'การจองนี้ยังไม่ถึงเวลาเริ่ม'],
   INVALID_ACTION: [400, 'การดำเนินการไม่ถูกต้อง'],
+  SELF_APPROVAL: [403, 'ไม่สามารถอนุมัติคำขอของตัวเองได้'],
 };
 
 const translate = (error, map) => {
@@ -59,7 +60,7 @@ export const allowedActions = (row, { staff, owner }) => {
   const started = `${row.work_date} ${row.start_time}` <= bangkokNow();
   const status = row.booking_status;
   const actions = [];
-  if (staff && status === 'PENDING' && !started) actions.push('APPROVE');
+  if (staff && !owner && status === 'PENDING' && !started) actions.push('APPROVE');
   if (staff && status === 'PENDING') actions.push('REJECT');
   if ((staff || owner) && (status === 'PENDING' || status === 'APPROVED') && !started) {
     actions.push('CANCEL');

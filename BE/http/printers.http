@@ -1,0 +1,215 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API เครื่องพิมพ์ 3D (Step 8C-2)
+# ต้องมี: ส่วนขยาย REST Client (humao.rest-client) และไฟล์ .env ในโฟลเดอร์เดียวกัน
+#   TOKEN_U=<access_token ของนักศึกษา>
+#   TOKEN_A=<access_token ของ Admin>
+# รันทีละ "Send Request" ตามลำดับจากบนลงล่าง (ข้อที่ใช้ตัวแปรจากข้อก่อนหน้า ต้องรันข้อก่อนหน้าก่อน)
+# วันที่ทดสอบ: ต้องเป็นวันทำการในอนาคตที่มีสล็อต (เปลี่ยนได้ที่ @date)
+# =====================================================================
+
+@base = http://localhost:5000/api/printers
+@roomBase = http://localhost:5000/api/rooms
+@tokenU = eyJhbGciOiJFUzI1NiIsImtpZCI6IjUzMTFkNTM1LTMyNTctNGU1OS1iMWYyLTlmNjI2OTI4NzNmNCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RqdGZjZGN3emR0aGRpcmd6YmVnLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI2YTFjN2FlNy03YmJlLTQ2NTQtYmY2YS0xZGVlMTE4MzYyYTUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzk0MjgyNzYxLCJpYXQiOjE3OTQyNzkxNjEsImVtYWlsIjoid2FydW5lZS5rbHVkQGJ1bWFpbC5uZXQiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIiwiZ29vZ2xlIl19LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NKQ0J3Qjc0dUtMRFNMVnhkYXdISUpsNFAzTl8weGhFbG5QVjYwNzZjdHIxa0txSVE9czk2LWMiLCJjdXN0b21fY2xhaW1zIjp7ImhkIjoiYnVtYWlsLm5ldCJ9LCJlbWFpbCI6IndhcnVuZWUua2x1ZEBidW1haWwubmV0IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IldBUlVORUUgS0xVRFBBTiIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJXQVJVTkVFIEtMVURQQU4iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NKQ0J3Qjc0dUtMRFNMVnhkYXdISUpsNFAzTl8weGhFbG5QVjYwNzZjdHIxa0txSVE9czk2LWMiLCJwcm92aWRlcl9pZCI6IjEwNTc3MjIyMTkxNzc1OTY1NDcyNCIsInN1YiI6IjEwNTc3MjIyMTkxNzc1OTY1NDcyNCJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzk0MTE1NzQwfV0sInNlc3Npb25faWQiOiJiZjFhODAzNC00ZjA1LTQxNzctOWNmNi0xNDA1NDAxYWM0ZjgiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.WNKt5KL8wwN9xGQEMaECtxlVmP6c8lbf_94HPqbkFcCP7MDqdxQd1GWZYXt6NG37gxfwuZH7kkmlaIygm1ePqg
+@tokenA = eyJhbGciOiJFUzI1NiIsImtpZCI6IjUzMTFkNTM1LTMyNTctNGU1OS1iMWYyLTlmNjI2OTI4NzNmNCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RqdGZjZGN3emR0aGRpcmd6YmVnLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI0ZjNkOWU5Mi05OTQ5LTQ5ZDgtODgyNS00ZDA3NmFlZmIwMzEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzk0Mjg0NDA0LCJpYXQiOjE3OTQyODA4MDQsImVtYWlsIjoid2FubmFwb3JuLmthZW9AYnVtYWlsLm5ldCIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzk0MjgwODA0fV0sInNlc3Npb25faWQiOiI5YTFiZDg3MS02ZGEyLTRhYzYtYThkYy0zMGZhMzEyYzAwMjIiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.PRXU2QJb3gZvme8-veX4lxuT6D-hk1uajzN7SqVTUrha06yPVpHOMQsb2Gec-NT9CsXtFDhsKq9ODpzJ-sS3ng
+@date = 2026-11-12
+
+### ---------- #2 GET availability (U) : ต้องได้ 8 เครื่อง, 3DP008 ไม่มี slots, อื่นๆ มี 2 ช่วง
+# @name avail
+GET {{base}}/availability?date={{date}}
+Authorization: Bearer {{tokenU}}
+
+### ---------- #3 GET availability ไม่ส่ง date : 400
+GET {{base}}/availability
+Authorization: Bearer {{tokenU}}
+
+### ---------- #4 U จอง S1 (3DP001 09-13) : 201, PENDING, PB-2026-00xx, actions = ["CANCEL"]
+# @name bookU1
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[0].schedule_id}},
+  "purpose": "ทดสอบ API ชิ้นงานต้นแบบ",
+  "material": "PLA",
+  "est_weight_g": 120.5
+}
+
+### ---------- #5 A จองช่วงเดียวกับ #4 : 409 (ช่วงเวลานี้ถูกจองเต็มแล้ว)
+POST {{base}}/bookings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[0].schedule_id}},
+  "purpose": "ทดสอบจองซ้ำช่วงเดิม",
+  "material": "PLA"
+}
+
+### ---------- #6 U จอง S3 (3DP002 09-13 ทับเวลากับ #4 คนละเครื่อง) : 409 (เวลาทับ)
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[1].slots[0].schedule_id}},
+  "purpose": "ทดสอบเวลาทับ",
+  "material": "PLA"
+}
+
+### ---------- #7 material ไม่ถูกต้อง : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[1].schedule_id}},
+  "purpose": "ทดสอบ material ผิด",
+  "material": "WOOD"
+}
+
+### ---------- #8 est_weight_g เกินช่วง : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[1].schedule_id}},
+  "purpose": "ทดสอบน้ำหนักเกิน",
+  "material": "PLA",
+  "est_weight_g": 99999
+}
+
+### ---------- #9 ไม่ส่ง purpose : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[1].schedule_id}},
+  "material": "PLA"
+}
+
+### ---------- #10 GET mine (U) : เห็นเฉพาะของตัวเอง + meta
+GET {{base}}/bookings/mine
+Authorization: Bearer {{tokenU}}
+
+### ---------- #11 GET bookings ทั้งหมดด้วย U : 403
+GET {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+
+### ---------- #12 U กด approve : 403
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenU}}
+
+### ---------- #13a A จอง S2 (3DP001 13-17) : 201, actions ไม่มี APPROVE
+# @name bookA1
+POST {{base}}/bookings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[0].slots[1].schedule_id}},
+  "purpose": "ทดสอบอนุมัติของตัวเอง",
+  "material": "PETG",
+  "est_weight_g": 80
+}
+
+### ---------- #13b A อนุมัติของตัวเอง : 403 "ไม่สามารถอนุมัติคำขอของตัวเองได้"
+POST {{base}}/bookings/{{bookA1.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- #14a A อนุมัติของ U (#4) : 200 APPROVED
+POST {{base}}/bookings/35/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- #14b ตรวจ actions ของรายการที่ APPROVED : แถวของ U ต้องมี actions = ["CANCEL","START"] (เรียงตามโค้ด: CANCEL, START)
+GET {{base}}/bookings?booking_status=APPROVED
+Authorization: Bearer {{tokenA}}
+
+### ---------- #15a A start : 200 IN_PROGRESS
+POST {{base}}/bookings/35/start
+Authorization: Bearer {{tokenA}}
+
+### ---------- #15b A complete : 200 COMPLETED
+POST {{base}}/bookings/35/complete
+Authorization: Bearer {{tokenA}}
+
+### ---------- #16 A (ไม่ใช่เจ้าของ) กด receive : 403
+POST {{base}}/bookings/35/receive
+Authorization: Bearer {{tokenA}}
+
+### ---------- #17 U (เจ้าของ) กด receive : 200 RECEIVED
+POST {{base}}/bookings/35/receive
+Authorization: Bearer {{tokenU}}
+
+### ---------- #18a U จอง S3 (3DP002 09-13) : 201 (จองได้แล้ว เพราะ #4 เป็น RECEIVED)
+# @name bookU2
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[1].slots[0].schedule_id}},
+  "purpose": "ทดสอบข้ามขั้นตอน",
+  "material": "ABS"
+}
+
+### ---------- #18b A อนุมัติ #18a
+POST {{base}}/bookings/37/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- #18c A complete ข้าม start (สถานะ APPROVED) : 409
+POST {{base}}/bookings/37/complete
+Authorization: Bearer {{tokenA}}
+
+### ---------- #19a U จอง S4 (3DP002 13-17) : 201 PENDING
+# @name bookU3
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[1].slots[1].schedule_id}},
+  "purpose": "ทดสอบยกเลิกแล้วจองใหม่",
+  "material": "RESIN"
+}
+
+### ---------- #19b U ยกเลิก : 200 CANCELLED
+POST {{base}}/bookings/{{bookU3.response.body.$.data.booking_id}}/cancel
+Authorization: Bearer {{tokenU}}
+
+### ---------- #19c U จอง S4 ซ้ำ : 201
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{avail.response.body.$.data[1].slots[1].schedule_id}},
+  "purpose": "จองใหม่หลังยกเลิก",
+  "material": "RESIN"
+}
+
+### ---------- #20a (ห้อง) ดูสล็อตห้องที่จองได้
+# @name roomAvail
+GET {{roomBase}}/availability?date={{date}}&only_bookable=true
+Authorization: Bearer {{tokenA}}
+
+### ---------- #20b A จองห้อง (ใช้สล็อตแรกของห้องแรกที่มีสล็อต -- ถ้า data[0].slots ว่าง ให้ดูผล #20a แล้วแก้ index เอง)
+# @name roomBookA
+POST {{roomBase}}/bookings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "schedule_id": {{roomAvail.response.body.$.data[0].slots[0].schedule_id}},
+  "purpose": "ทดสอบอนุมัติของตัวเอง (ห้อง)"
+}
+
+### ---------- #20c A อนุมัติการจองห้องของตัวเอง : 403 (SELF_APPROVAL)
+POST {{roomBase}}/bookings/{{roomBookA.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- (ล้างข้อมูลทดสอบ) A ยกเลิกการจองห้องที่สร้างใน #20b
+POST {{roomBase}}/bookings/{{roomBookA.response.body.$.data.booking_id}}/cancel
+Authorization: Bearer {{tokenA}}
