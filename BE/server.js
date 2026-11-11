@@ -11,6 +11,7 @@ import authRoutes from './src/routes/auth.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import roomsRoutes from './src/routes/rooms.routes.js';
 import printersRoutes from './src/routes/printers.routes.js';
+import equipmentRoutes from './src/routes/equipment.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,6 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/printers', printersRoutes);
+app.use('/api/equipment', equipmentRoutes);
 
 // --- ต้องอยู่ท้ายสุดเสมอ ---
 app.use(notFound);

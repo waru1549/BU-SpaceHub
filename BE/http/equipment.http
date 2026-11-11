@@ -1,0 +1,192 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API ยืม-คืนอุปกรณ์ (Step 9-2)  | ไฟล์เดียวกับ printers.http: ใช้ .env เดียวกัน
+#   TOKEN_U = นักศึกษา (ต้องไม่มีของค้างคืน/ค่าปรับ UNPAID)   TOKEN_A = Admin
+# รันตามลำดับจากบนลงล่าง (ข้อที่ใช้ตัวแปรจากข้อก่อนหน้าต้องรันข้อก่อนหน้า)
+# อุปกรณ์ที่ใช้ทดสอบ (resource_id): 31 ขาตั้งกล้อง(10 ชิ้น) | 30 ไมค์ Rode(6) | 29 Meta Quest(4) | 25 Arduino(20)
+# =====================================================================
+
+@base = http://localhost:5000/api/equipment
+@tokenU = {{$dotenv TOKEN_U}}
+@tokenA = {{$dotenv TOKEN_A}}
+@today = {{$datetime "YYYY-MM-DD"}}
+@plus3 = {{$datetime "YYYY-MM-DD" 3 d}}
+@plus5 = {{$datetime "YYYY-MM-DD" 5 d}}
+@plus10 = {{$datetime "YYYY-MM-DD" 10 d}}
+@plus20 = {{$datetime "YYYY-MM-DD" 20 d}}
+@yesterday = {{$datetime "YYYY-MM-DD" -1 d}}
+
+### ---------- E1 GET availability (U) : 200, 14 รายการ, มี quantity/reserved/remaining/is_borrowable
+GET {{base}}/availability?borrow_date={{today}}&return_date={{plus3}}
+Authorization: Bearer {{tokenU}}
+
+### ---------- E2 availability ไม่ส่งวันที่ : 400
+GET {{base}}/availability
+Authorization: Bearer {{tokenU}}
+
+### ---------- E3 U ขอยืมขาตั้งกล้อง (วันนี้ถึง +3) : 201, PENDING, EB-2026-00xx, actions = ["CANCEL"]
+# @name bookU1
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "resource_id": 31,
+  "borrow_date": "{{today}}",
+  "return_date": "{{plus3}}",
+  "purpose": "ทดสอบ API ถ่ายงานโปรเจกต์"
+}
+
+### ---------- E4 ขอยืมชิ้นเดิมซ้ำ : 409 (มีคำขอ/การยืมอยู่แล้ว)
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 31, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "ซ้ำ" }
+
+### ---------- E5 ยืมเกิน 7 วัน (วันนี้ถึง +10) : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{today}}", "return_date": "{{plus10}}", "purpose": "ยืมนานเกินกำหนด" }
+
+### ---------- E6 จองล่วงหน้าเกิน 14 วัน (+20) : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{plus20}}", "return_date": "{{plus20}}", "purpose": "จองไกลเกินไป" }
+
+### ---------- E7 วันยืมย้อนหลัง (เมื่อวาน) : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{yesterday}}", "return_date": "{{plus3}}", "purpose": "ย้อนหลัง" }
+
+### ---------- E8 วันคืนก่อนวันยืม : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{plus5}}", "return_date": "{{plus3}}", "purpose": "วันคืนผิด" }
+
+### ---------- E9 ไม่ส่ง purpose : 400
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{today}}", "return_date": "{{plus3}}" }
+
+### ---------- E10 U ขอยืมชิ้นที่ 2 (ไมค์ Rode) : 201
+# @name bookU2
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 30, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "บันทึกเสียงสัมภาษณ์" }
+
+### ---------- E11 ชิ้นที่ 3 : 409 (ยืมพร้อมกันได้ไม่เกิน 2 รายการ)
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "ชิ้นที่สาม" }
+
+### ---------- E12 GET mine (U) : 200 เห็นเฉพาะของตัวเอง + meta
+GET {{base}}/bookings/mine
+Authorization: Bearer {{tokenU}}
+
+### ---------- E13 U ดูรายการทั้งหมด : 403
+GET {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+
+### ---------- E14 U อนุมัติ : 403
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenU}}
+
+### ---------- E15a A ขอยืม Arduino เอง : 201 (actions ไม่มี APPROVE)
+# @name bookA1
+POST {{base}}/bookings
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_id": 25, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "ทดสอบอนุมัติของตัวเอง" }
+
+### ---------- E15b A อนุมัติของตัวเอง : 403 "ไม่สามารถอนุมัติคำขอของตัวเองได้"
+POST {{base}}/bookings/{{bookA1.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- E16 A อนุมัติของ U (ขาตั้งกล้อง) : 200 APPROVED
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/approve
+Authorization: Bearer {{tokenA}}
+
+### ---------- E17 A ส่งมอบ : 200 RECEIVED
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/receive
+Authorization: Bearer {{tokenA}}
+
+### ---------- E18 U กดรับคืนเอง : 403
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/return
+Authorization: Bearer {{tokenU}}
+
+### ---------- E19 A รับคืนพร้อมค่าปรับแต่ไม่ใส่เหตุผล : 400
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/return
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "fine_amount": 300 }
+
+### ---------- E20 A รับคืนพร้อมค่าปรับชำรุด 300 : 200 RETURNED, fine_amount = 300
+POST {{base}}/bookings/{{bookU1.response.body.$.data.booking_id}}/return
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "fine_amount": 300, "fine_reason": "ขาตั้งกล้องหัก 1 ขา" }
+
+### ---------- E21 ค่าปรับของฉัน (U) : 200 มี 1 รายการ UNPAID 300
+# @name myFines
+GET {{base}}/fines/mine
+Authorization: Bearer {{tokenU}}
+
+### ---------- E22 U ขอยืมใหม่ขณะมีค่าปรับค้าง : 409 (ค่าปรับค้างชำระ)
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "ยืมหลังมีค่าปรับ" }
+
+### ---------- E23 U ชำระค่าปรับเอง : 403 (เฉพาะ Staff)
+POST {{base}}/fines/{{myFines.response.body.$.data[0].fine_id}}/pay
+Authorization: Bearer {{tokenU}}
+
+### ---------- E24 A ดูค่าปรับทั้งหมด (กรอง UNPAID) : 200
+GET {{base}}/fines?fine_status=UNPAID
+Authorization: Bearer {{tokenA}}
+
+### ---------- E25 A บันทึกชำระ : 200 PAID
+POST {{base}}/fines/{{myFines.response.body.$.data[0].fine_id}}/pay
+Authorization: Bearer {{tokenA}}
+
+### ---------- E26 A ชำระซ้ำ : 409
+POST {{base}}/fines/{{myFines.response.body.$.data[0].fine_id}}/pay
+Authorization: Bearer {{tokenA}}
+
+### ---------- E27 U ขอยืมใหม่ได้แล้ว : 201
+# @name bookU3
+POST {{base}}/bookings
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 29, "borrow_date": "{{today}}", "return_date": "{{plus3}}", "purpose": "ยืมหลังชำระค่าปรับ" }
+
+### ---------- E28 U ยกเลิกคำขอ : 200 CANCELLED
+POST {{base}}/bookings/{{bookU3.response.body.$.data.booking_id}}/cancel
+Authorization: Bearer {{tokenU}}
+
+### ---------- E29 รายการเกินกำหนด (A) : ข้อมูล seed ที่เลยกำหนด: overdue_days > 0 และ actions = ["RETURN"]
+GET {{base}}/bookings?booking_status=OVERDUE
+Authorization: Bearer {{tokenA}}
+
+### ---------- E30 ปฏิเสธ (A) คำขอของ U ที่ค้าง (ไมค์ Rode จาก E10) : 200 REJECTED
+POST {{base}}/bookings/{{bookU2.response.body.$.data.booking_id}}/reject
+Authorization: Bearer {{tokenA}}
