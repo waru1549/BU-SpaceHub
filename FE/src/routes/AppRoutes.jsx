@@ -9,6 +9,7 @@ import Profile from '../pages/Profile.jsx';
 import ComingSoon from '../pages/ComingSoon.jsx';
 import Rooms from '../pages/Rooms.jsx';
 import Printers from '../pages/Printers.jsx';
+import Equipment from '../pages/Equipment.jsx';
 import StaffRequests from '../pages/StaffRequests.jsx';
 import NotFound from '../pages/NotFound.jsx';
 import { ROLES } from '../utils/constants.js';
@@ -30,7 +31,7 @@ export default function AppRoutes() {
           {/* โมดูลบริการ: หน้าชั่วคราว จะแทนที่ด้วยโมดูลจริงใน Step 8-10 */}
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/printers" element={<Printers />} />
-          <Route path="/equipment" element={<ComingSoon title="ยืม-คืนอุปกรณ์" step="Step 9" />} />
+          <Route path="/equipment" element={<Equipment />} />
           <Route path="/maintenance" element={<ComingSoon title="แจ้งซ่อม" step="Step 10" />} />
 
           <Route element={<ProtectedRoute roles={[ROLES.STAFF, ROLES.ADMIN]} />}>
