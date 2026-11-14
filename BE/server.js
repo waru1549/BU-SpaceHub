@@ -12,10 +12,11 @@ import dashboardRoutes from './src/routes/dashboard.routes.js';
 import roomsRoutes from './src/routes/rooms.routes.js';
 import printersRoutes from './src/routes/printers.routes.js';
 import equipmentRoutes from './src/routes/equipment.routes.js';
+import maintenanceRoutes from './src/routes/maintenance.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5174')
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5170')
   .split(',')
   .map((s) => s.trim());
 
@@ -54,6 +55,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/printers', printersRoutes);
 app.use('/api/equipment', equipmentRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 // --- ต้องอยู่ท้ายสุดเสมอ ---
 app.use(notFound);

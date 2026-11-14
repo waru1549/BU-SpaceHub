@@ -1,0 +1,200 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API แจ้งซ่อม (Step 10-2) | ใช้ BE/http/.env เดียวกัน
+#   TOKEN_U = นักศึกษา   TOKEN_A = Admin   (Admin ถือเป็น Staff ด้วย)
+# รันตามลำดับจากบนลงล่าง (ข้อที่ใช้ตัวแปรจากข้อก่อนหน้าต้องรันข้อก่อนหน้า)
+# ทรัพยากรที่ใช้ทดสอบ: resource_id 31 (ขาตั้งกล้อง) | รูปจริงจะทดสอบอัปโหลดใน Step 10-3 (FE)
+# =====================================================================
+
+@base = http://localhost:5000/api/maintenance
+@tokenU = {{$dotenv TOKEN_U}}
+@tokenA = {{$dotenv TOKEN_A}}
+
+### ---------- M1 รายการทรัพยากร (U) : 200, มี category + resource_status
+GET {{base}}/resources
+Authorization: Bearer {{tokenU}}
+
+### ---------- M2 รายชื่อ Staff ให้มอบหมาย (U) : 403
+GET {{base}}/staff
+Authorization: Bearer {{tokenU}}
+
+### ---------- M3 รายชื่อ Staff (A) : 200, รายการ STAFF/ADMIN เท่านั้น
+# @name staffList
+GET {{base}}/staff
+Authorization: Bearer {{tokenA}}
+
+### ---------- M4 U แจ้งซ่อมผูกทรัพยากร : 201, PENDING, MT-2026-00xx, actions = ["CANCEL"]
+# @name reqU1
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "resource_id": 31,
+  "title": "ขาตั้งกล้องล็อกไม่อยู่",
+  "description": "ขาตั้งกล้องขาที่ 2 ล็อกไม่แน่น ปรับความสูงแล้วหลุดทันที"
+}
+
+### ---------- M5 แจ้งซ้ำทรัพยากรเดิม : 409
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 31, "title": "ซ้ำ", "description": "แจ้งซ้ำทรัพยากรเดิมที่ยังไม่ปิดงาน" }
+
+### ---------- M6 ไม่ระบุทรัพยากร/สถานที่ : 400
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "title": "ไฟเสีย", "description": "หลอดไฟดับทั้งแถวหน้าห้อง" }
+
+### ---------- M7 รายละเอียดสั้นเกินไป : 400
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "resource_id": 31, "title": "ไฟเสีย", "description": "สั้น" }
+
+### ---------- M8 U แจ้งซ่อมพิมพ์สถานที่เอง : 201, location ถูกเก็บ, resource_id = null
+# @name reqU2
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{
+  "location": "ลานจอดรถ ตึก 3",
+  "title": "ไฟถนนดับ",
+  "description": "หลอดไฟริมถนนดับหลายต้น มืดมากตอนกลางคืน"
+}
+
+### ---------- M9 รายการของฉัน (U) : 200, เห็น 2 งานล่าสุด, meta pagination
+GET {{base}}/requests/mine?page=1&limit=10
+Authorization: Bearer {{tokenU}}
+
+### ---------- M10 รายการทั้งหมด (U) : 403
+GET {{base}}/requests
+Authorization: Bearer {{tokenU}}
+
+### ---------- M11 รายการทั้งหมด (A) ตัวกรอง PENDING : 200, actions ตามสิทธิ์ (มี ASSIGN, REJECT)
+GET {{base}}/requests?booking_status=PENDING
+Authorization: Bearer {{tokenA}}
+
+### ---------- M12 รายละเอียดงาน (U เจ้าของ) : 200, มี attachments = []
+GET {{base}}/requests/37
+Authorization: Bearer {{tokenU}}
+
+### ---------- M13 เริ่มซ่อมก่อนมอบหมาย (A) : 409 NOT_ASSIGNED
+POST {{base}}/requests/37/start
+Authorization: Bearer {{tokenA}}
+
+### ---------- M14 U มอบหมายงาน : 403
+POST {{base}}/requests/37/assign
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "assignee_id": 1 }
+
+### ---------- M15 A มอบหมายให้ผู้ใช้ที่ไม่ใช่ Staff (assignee_id = U) : 400
+# แก้เลข 9 เป็น user_id ของนักศึกษา ถ้าไม่ใช่ Staff จะต้องได้ 400
+POST {{base}}/requests/37/assign
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "assignee_id": 36 }
+
+### ---------- M16 A มอบหมายให้ Staff คนแรกในรายชื่อ : 200, assignee_name มีค่า, actions เพิ่ม START
+POST {{base}}/requests/37/assign
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "assignee_id": {{staffList.response.body.$.data[0].user_id}} }
+
+### ---------- M17 A เริ่มซ่อม : 200 IN_PROGRESS  (ถ้า Staff คนแรกไม่ใช่ Admin ก็ยังเริ่มได้เพราะ Admin ทำได้ทุกงาน)
+POST {{base}}/requests/37/start
+Authorization: Bearer {{tokenA}}
+
+### ---------- M18 U ยกเลิกหลังเริ่มซ่อม : 409
+POST {{base}}/requests/37/cancel
+Authorization: Bearer {{tokenU}}
+
+### ---------- M19 ปิดงานโดยไม่ใส่บันทึก : 400 NOTE_REQUIRED
+POST {{base}}/requests/37/complete
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "note": "" }
+
+### ---------- M20 ปิดงานพร้อมบันทึก : 200 COMPLETED  (ทรัพยากร 31 กลับเป็น AVAILABLE)
+POST {{base}}/requests/37/complete
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "note": "ซ่อมล็อกขาตั้งและทดสอบแล้ว" }
+
+### ---------- M21 A ปฏิเสธงานที่ 2 โดยไม่ใส่เหตุผล : 400
+POST {{base}}/requests/38/reject
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "note": "" }
+
+### ---------- M22 U ยกเลิกงานที่ 2 ก่อนเริ่มซ่อม : 200 CANCELLED
+POST {{base}}/requests/38/cancel
+Authorization: Bearer {{tokenU}}
+
+### ---------- M23 ขอ signed upload (ผิดชนิดไฟล์ pdf) : 400  (ใช้งานที่ปิดแล้ว/ยกเลิกแล้วจะได้ 403 ก่อน จึงสร้างงานใหม่)
+# @name reqU3
+POST {{base}}/requests
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "location": "โรงอาหาร", "title": "โต๊ะหัก", "description": "โต๊ะตัวที่ 3 ขาหัก นั่งไม่ได้" }
+
+###
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments/sign
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "files": [ { "file_name": "a.pdf", "content_type": "application/pdf", "size": 1000 } ] }
+
+### ---------- M24 signed upload ไฟล์ใหญ่เกิน 5MB : 400
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments/sign
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "files": [ { "file_name": "a.png", "content_type": "image/png", "size": 6000000 } ] }
+
+### ---------- M25 ขอ 4 ไฟล์ในครั้งเดียว : 409 (เกิน 3 รูป)
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments/sign
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "files": [
+  { "file_name": "1.png", "content_type": "image/png", "size": 1000 },
+  { "file_name": "2.png", "content_type": "image/png", "size": 1000 },
+  { "file_name": "3.png", "content_type": "image/png", "size": 1000 },
+  { "file_name": "4.png", "content_type": "image/png", "size": 1000 } ] }
+
+### ---------- M26 ขอ signed upload ปกติ 1 ไฟล์ : 200, ได้ path (เลขงาน/uuid.png) + token
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments/sign
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "files": [ { "file_name": "test.png", "content_type": "image/png", "size": 123456 } ] }
+
+### ---------- M27 confirm ไฟล์ที่ยังไม่ได้อัปโหลดจริง : 400 (ระบบตรวจว่าไฟล์อยู่ใน Storage จริง)
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "files": [ { "path": "{{reqU3.response.body.$.data.booking_id}}/00000000-0000-0000-0000-000000000000.png", "file_name": "x.png" } ] }
+
+### ---------- M28 Staff/คนอื่นแนบรูปแทนเจ้าของ (A) : 403
+POST {{base}}/requests/{{reqU3.response.body.$.data.booking_id}}/attachments/sign
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "files": [ { "file_name": "a.png", "content_type": "image/png", "size": 1000 } ] }
+
+### ---------- M29 ไม่มี token : 401
+GET {{base}}/requests/mine
