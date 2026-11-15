@@ -1,6 +1,6 @@
 import { BOOKING_STATUS, STATUS_LABEL_BY_VARIANT } from '../../utils/booking.js';
 
-// variant="printer" | "equipment" ใช้ข้อความเฉพาะของโมดูล (เช่น RECEIVED = กำลังยืม)
+// variant="printer" | "equipment" | "maintenance" | "maintenance" ใช้ข้อความเฉพาะของโมดูล (เช่น RECEIVED = กำลังยืม)
 export default function StatusBadge({ status, variant }) {
   const base = BOOKING_STATUS[status] ?? { label: status, tone: 'bg-slate-100 text-slate-700' };
   const label = STATUS_LABEL_BY_VARIANT[variant]?.[status] ?? base.label;

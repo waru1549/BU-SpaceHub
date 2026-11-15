@@ -21,9 +21,18 @@ export const EQUIPMENT_STATUS_LABEL = {
   RECEIVED: 'กำลังยืม',
 };
 
+// แจ้งซ่อม: PENDING = รอรับเรื่อง, APPROVED (ข้อมูลเดิม) = รับเรื่องแล้ว, IN_PROGRESS = กำลังซ่อม
+export const MAINTENANCE_STATUS_LABEL = {
+  PENDING: 'รอรับเรื่อง',
+  APPROVED: 'รับเรื่องแล้ว',
+  IN_PROGRESS: 'กำลังซ่อม',
+  REJECTED: 'ปฏิเสธ',
+};
+
 export const STATUS_LABEL_BY_VARIANT = {
   printer: PRINTER_STATUS_LABEL,
   equipment: EQUIPMENT_STATUS_LABEL,
+  maintenance: MAINTENANCE_STATUS_LABEL,
 };
 
 const toOptions = (keys, labels = {}) => [
@@ -47,6 +56,11 @@ export const PRINTER_STATUS_OPTIONS = toOptions(
 export const EQUIPMENT_STATUS_OPTIONS = toOptions(
   ['PENDING', 'APPROVED', 'RECEIVED', 'OVERDUE', 'RETURNED', 'REJECTED', 'CANCELLED'],
   EQUIPMENT_STATUS_LABEL,
+);
+
+export const MAINTENANCE_STATUS_OPTIONS = toOptions(
+  ['PENDING', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED'],
+  MAINTENANCE_STATUS_LABEL,
 );
 
 // สถานะของทรัพยากร (ห้อง/เครื่อง/อุปกรณ์) ที่ไม่พร้อมใช้งาน

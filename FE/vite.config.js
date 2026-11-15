@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // strictPort: ถ้า 5174 ถูกใช้อยู่ให้ error แทนที่จะสลับพอร์ตเอง (กัน OAuth redirect พัง)
-  server: { port: 5174, strictPort: true },
-  preview: { port: 5174, strictPort: true },
+  // strictPort: ถ้า 5170 ถูกใช้อยู่ให้ error แทนที่จะสลับพอร์ตเอง (กัน OAuth redirect พัง)
+  server: { port: 5170, strictPort: true },
+  preview: { port: 5170, strictPort: true },
 });

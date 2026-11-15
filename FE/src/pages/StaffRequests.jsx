@@ -3,10 +3,12 @@ import RoomRequestsPanel from '../components/Requests/RoomRequestsPanel.jsx';
 import PrinterRequestsPanel from '../components/Requests/PrinterRequestsPanel.jsx';
 import EquipmentRequestsPanel from '../components/Requests/EquipmentRequestsPanel.jsx';
 import EquipmentFinesPanel from '../components/Requests/EquipmentFinesPanel.jsx';
+import MaintenanceRequestsPanel from '../components/Requests/MaintenanceRequestsPanel.jsx';
 
-// แต่ละแท็บใช้สีของโมดูลตัวเอง (ห้อง = Indigo, เครื่องพิมพ์ = Emerald, อุปกรณ์/ค่าปรับ = Amber)
+// แต่ละแท็บใช้สีของโมดูลตัวเอง (ห้อง = Indigo, เครื่องพิมพ์ = Emerald, อุปกรณ์/ค่าปรับ = Amber, แจ้งซ่อม = Sky)
 const INDIGO = { active: 'border-indigo-600 text-indigo-800', ring: 'focus-visible:outline-indigo-500' };
 const EMERALD = { active: 'border-emerald-600 text-emerald-800', ring: 'focus-visible:outline-emerald-600' };
+const SKY = { active: 'border-sky-600 text-sky-900', ring: 'focus-visible:outline-sky-600' };
 const AMBER = { active: 'border-amber-600 text-amber-900', ring: 'focus-visible:outline-amber-600' };
 
 const TABS = [
@@ -14,9 +16,10 @@ const TABS = [
   { id: 'printers', label: 'เครื่องพิมพ์ 3D', Panel: PrinterRequestsPanel, ...EMERALD },
   { id: 'equipment', label: 'ยืม-คืนอุปกรณ์', Panel: EquipmentRequestsPanel, ...AMBER },
   { id: 'fines', label: 'ค่าปรับอุปกรณ์', Panel: EquipmentFinesPanel, ...AMBER },
+  { id: 'maintenance', label: 'แจ้งซ่อม', Panel: MaintenanceRequestsPanel, ...SKY },
 ];
 
-// หน้าคิวคำขอของเจ้าหน้าที่ ตอนนี้มีห้อง เครื่องพิมพ์ อุปกรณ์ และค่าปรับ แจ้งซ่อมจะเพิ่มในขั้นถัดไป
+// หน้าคิวคำขอของเจ้าหน้าที่: ห้อง เครื่องพิมพ์ อุปกรณ์ ค่าปรับ และแจ้งซ่อม
 export default function StaffRequests() {
   const [tab, setTab] = useState('rooms');
   const current = TABS.find((t) => t.id === tab) ?? TABS[0];
