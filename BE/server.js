@@ -13,6 +13,7 @@ import roomsRoutes from './src/routes/rooms.routes.js';
 import printersRoutes from './src/routes/printers.routes.js';
 import equipmentRoutes from './src/routes/equipment.routes.js';
 import maintenanceRoutes from './src/routes/maintenance.routes.js';
+import chatRoutes from './src/routes/chat.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,6 +57,7 @@ app.use('/api/rooms', roomsRoutes);
 app.use('/api/printers', printersRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/chat', chatRoutes);
 
 // --- ต้องอยู่ท้ายสุดเสมอ ---
 app.use(notFound);
