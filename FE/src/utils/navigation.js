@@ -44,7 +44,6 @@ export const NAV_SECTIONS = [
     items: [
       { to: '/admin/users', label: 'จัดการผู้ใช้', icon: Users },
       { to: '/admin/resources', label: 'จัดการทรัพยากร', icon: Building2 },
-      { to: '/admin/reports', label: 'รายงานระบบ', icon: FileText },
     ],
   },
   {
