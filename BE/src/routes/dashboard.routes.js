@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 router.get('/kpi', controller.getKpi);
 router.get('/trend', controller.getTrend);
+router.get('/system/:module', controller.getSystem);
 router.get('/tables/:name', controller.getTable);
 
 export default router;

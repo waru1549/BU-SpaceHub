@@ -81,7 +81,7 @@ export default function MonthlyTrendChart({ rows, loading, error, onRetry }) {
     body = (
       <div
         aria-hidden="true"
-        className="h-[280px] animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none"
+        className="h-70 animate-pulse rounded-xl bg-slate-100 motion-reduce:animate-none"
       />
     );
   } else if (error) {
@@ -102,8 +102,8 @@ export default function MonthlyTrendChart({ rows, loading, error, onRetry }) {
     body = <p className="py-12 text-center text-slate-600">ยังไม่มีข้อมูลรายเดือน</p>;
   } else if (asTable) {
     body = (
-      <div className="max-h-[22rem] overflow-auto" role="region" aria-label="ตารางข้อมูลแนวโน้มรายเดือน" tabIndex={0}>
-        <table className="w-full min-w-[32rem] border-separate border-spacing-0 text-sm">
+      <div className="max-h-88 overflow-auto" role="region" aria-label="ตารางข้อมูลแนวโน้มรายเดือน" tabIndex={0}>
+        <table className="w-full min-w-lg border-separate border-spacing-0 text-sm">
           <caption className="sr-only">จำนวนรายการรายเดือนแยกตามโมดูล</caption>
           <thead>
             <tr>
@@ -206,7 +206,7 @@ export default function MonthlyTrendChart({ rows, loading, error, onRetry }) {
 
           {activeMonth && (
             <div
-              className="pointer-events-none absolute top-2 z-10 min-w-[11rem] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg"
+              className="pointer-events-none absolute top-2 z-10 min-w-44 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg"
               style={{ left: tipLeft, transform: `translateX(${tipShift})` }}
             >
               <p className="mb-1 font-semibold text-slate-900">{formatMonth(activeMonth.label)}</p>

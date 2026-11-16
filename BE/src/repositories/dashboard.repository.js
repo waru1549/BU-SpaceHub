@@ -26,6 +26,27 @@ export const fetchTrend = async () => {
   return data;
 };
 
+// ---------- Dashboard v2: สรุปรายระบบ (view จาก migration 009) ----------
+const byModule = async (view, columns, module, orderBy) => {
+  let query = supabase.from(view).select(columns).eq('module', module);
+  for (const col of orderBy) query = query.order(col, { ascending: true });
+  const { data, error } = await query.limit(200);
+  if (error) fail(error);
+  return data;
+};
+
+export const fetchModuleKpi = (module) =>
+  byModule('v_dashboard_module_kpi', 'kpi_key, kpi_value', module, ['kpi_key']);
+
+export const fetchStatusDistribution = (module) =>
+  byModule('v_dashboard_status_distribution', 'status, total', module, ['status']);
+
+export const fetchBreakdown = (module) =>
+  byModule('v_dashboard_module_breakdown', 'breakdown_type, group_key, total, value2', module, [
+    'breakdown_type',
+    'group_key',
+  ]);
+
 // ดึงข้อมูลจาก view ทีละหน้า (เรียงลำดับ + กรอง + นับจำนวนทั้งหมด)
 export const fetchPage = async (cfg, { from, to, sort, ascending, filters }) => {
   let query = applyFilters(

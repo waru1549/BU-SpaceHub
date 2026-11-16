@@ -86,7 +86,7 @@ export default function DataTable({
         tabIndex={0}
         aria-busy={loading}
       >
-        <table className="w-full min-w-[40rem] border-separate border-spacing-0 text-sm">
+        <table className="w-full min-w-160 border-separate border-spacing-0 text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr>
@@ -126,7 +126,7 @@ export default function DataTable({
                 <tr key={`sk-${i}`} aria-hidden="true">
                   {columns.map((col) => (
                     <td key={col.key} className="border-b border-slate-100 px-4 py-3">
-                      <div className="h-4 w-full max-w-[8rem] animate-pulse rounded bg-slate-200 motion-reduce:animate-none" />
+                      <div className="h-4 w-full max-w-32 animate-pulse rounded bg-slate-200 motion-reduce:animate-none" />
                     </td>
                   ))}
                 </tr>
@@ -208,7 +208,7 @@ export default function DataTable({
             <PagerButton label="หน้าก่อนหน้า" disabled={page <= 1} onClick={() => onPageChange?.(page - 1)}>
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </PagerButton>
-            <span className="min-w-[5.5rem] px-2 text-center">
+            <span className="min-w-22 px-2 text-center">
               หน้า {page} / {totalPages}
             </span>
             <PagerButton

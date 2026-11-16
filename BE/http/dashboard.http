@@ -1,0 +1,76 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API Dashboard v2 (Step v2-2) | ใช้ BE/http/.env เดียวกัน
+#   TOKEN_U = นักศึกษา   TOKEN_A = Admin
+# ทุกข้อเป็น GET อ่านอย่างเดียว ไม่แก้ข้อมูล รันข้ามลำดับได้
+# =====================================================================
+
+@base = http://localhost:5000/api/dashboard
+@tokenU = {{$dotenv TOKEN_U}}
+@tokenA = {{$dotenv TOKEN_A}}
+
+### ---------- D1 สรุประบบห้อง (U) : 200, kpis มี total/pending/upcoming/avg_utilization_pct, มี status_distribution และ breakdown (type=SLOT)
+GET {{base}}/system/room
+Authorization: Bearer {{tokenU}}
+
+### ---------- D2 เครื่องพิมพ์ (U) : 200, kpis มี total/pending/in_progress/awaiting_pickup, breakdown type=MATERIAL
+GET {{base}}/system/printer
+Authorization: Bearer {{tokenU}}
+
+### ---------- D3 อุปกรณ์ (U) : 200, kpis มี on_loan/overdue/pending/unpaid_fines, breakdown type=FINE_STATUS
+GET {{base}}/system/equipment
+Authorization: Bearer {{tokenU}}
+
+### ---------- D4 แจ้งซ่อม (U) : 200, kpis มี pending/in_progress/completed_30d/avg_repair_days, breakdown type=REPAIR_CATEGORY
+GET {{base}}/system/maintenance
+Authorization: Bearer {{tokenU}}
+
+### ---------- D5 ระบบที่ไม่มี : 404
+GET {{base}}/system/xyz
+Authorization: Bearer {{tokenU}}
+
+### ---------- D6 พิมพ์ตัวพิมพ์ใหญ่ (A) : 200 (ROOM)
+GET {{base}}/system/ROOM
+Authorization: Bearer {{tokenA}}
+
+### ---------- D7 รายการที่ต้องดำเนินการของห้อง (U) : 200, ทุกแถว module=ROOM และ needs_action=true
+GET {{base}}/tables/recent?module=ROOM&needs_action=true&page=1&limit=10
+Authorization: Bearer {{tokenU}}
+
+### ---------- D8 รายการล่าสุดของแจ้งซ่อม (U) : 200, มี item_name/status/event_date ไม่มีชื่อผู้ใช้ ไม่มีวัตถุประสงค์
+GET {{base}}/tables/recent?module=MAINTENANCE&page=1&limit=10
+Authorization: Bearer {{tokenU}}
+
+### ---------- D9 module ผิด : 400
+GET {{base}}/tables/recent?module=XYZ
+Authorization: Bearer {{tokenU}}
+
+### ---------- D10 needs_action ผิดรูปแบบ : 400
+GET {{base}}/tables/recent?needs_action=yes
+Authorization: Bearer {{tokenU}}
+
+### ---------- D11 อันดับทรัพยากรที่ถูกแจ้งซ่อม (U) : 200, เรียง repair_count มาก -> น้อย
+GET {{base}}/tables/repair_ranking?page=1&limit=5
+Authorization: Bearer {{tokenU}}
+
+### ---------- D12 การใช้งานทรัพยากรเฉพาะห้อง (U) : 200, ทุกแถว resource_category=ROOM
+GET {{base}}/tables/utilization?resource_category=ROOM&page=1&limit=5&sort=utilization_pct&order=desc
+Authorization: Bearer {{tokenU}}
+
+### ---------- D13 KPI รวมเดิมยังใช้ได้ (U) : 200
+GET {{base}}/kpi
+Authorization: Bearer {{tokenU}}
+
+### ---------- D14 แนวโน้มเดิมยังใช้ได้ (U) : 200
+GET {{base}}/trend
+Authorization: Bearer {{tokenU}}
+
+### ---------- D15 ตารางเฉพาะ Staff ยังถูกห้าม (U) : 403
+GET {{base}}/tables/overdue
+Authorization: Bearer {{tokenU}}
+
+### ---------- D16 ตารางแจ้งซ่อมเดิม (A) : 200, ไม่มีแถวสถานะยกเลิกที่ tracking_state = ค้างดำเนินการ
+GET {{base}}/tables/maintenance?page=1&limit=10
+Authorization: Bearer {{tokenA}}
+
+### ---------- D17 ไม่มี token : 401
+GET {{base}}/system/room
