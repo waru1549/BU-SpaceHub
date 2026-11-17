@@ -1,0 +1,181 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API Admin จัดการผู้ใช้ (Step U2) | ใช้ BE/http/.env เดียวกัน
+#   TOKEN_A = Admin   TOKEN_U = นักศึกษา (บัญชีจริงที่ใช้ล็อกอิน)
+# ก่อนเริ่ม: รัน cleanup_admin_users.sql ข้อ (0)-(2) แล้วแก้เลข @tstId @activeUserId @selfId ด้านล่าง
+# @studentId = user_id ของนักศึกษาเจ้าของ TOKEN_U (ได้จากข้อ U1b)
+# ห้ามเปลี่ยน role/ระงับ Admin ตัวจริง ทดสอบเฉพาะ tstId และ studentId | จบแล้วรัน cleanup ข้อ (3)-(4)
+# =====================================================================
+
+@base = http://localhost:5000/api/admin/users
+@tokenA = {{$dotenv TOKEN_A}}
+@tokenU = {{$dotenv TOKEN_U}}
+
+@tstId = 45
+@activeUserId = 7
+@selfId = 38
+@studentId = 36
+
+### ---------- U1 ตัวเลือก : 200, roles 3 ค่า (USER/STAFF/ADMIN), statuses 3 ค่า
+GET {{base}}/options
+Authorization: Bearer {{tokenA}}
+
+### ---------- U1b หา user_id ของนักศึกษา (TOKEN_U) : 200 ได้ userId แล้วใส่ @studentId
+GET http://localhost:5000/api/chat/whoami
+Authorization: Bearer {{tokenU}}
+
+### ---------- U2 ไม่แนบ token : 401
+GET {{base}}
+
+### ---------- U3 นักศึกษาเรียก : 403
+GET {{base}}
+Authorization: Bearer {{tokenU}}
+
+### ---------- U4 รายการ : 200, rows มี role/user_status/booking_count/last_login, meta ครบ, ไม่มี google_id
+GET {{base}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- U5 ค้นหา q=tst : 200, เจอ TST ผู้ใช้ทดสอบ
+GET {{base}}?q=tst
+Authorization: Bearer {{tokenA}}
+
+### ---------- U5b ค้นหาด้วยอีเมลมี @ และ . : 200 ไม่ error
+GET {{base}}?q=bumail.net
+Authorization: Bearer {{tokenA}}
+
+### ---------- U6 กรอง role=ADMIN : 200 ทุกแถวเป็น ADMIN
+GET {{base}}?role=ADMIN
+Authorization: Bearer {{tokenA}}
+
+### ---------- U7 กรอง role ไม่มีจริง : 400
+GET {{base}}?role=BOSS
+Authorization: Bearer {{tokenA}}
+
+### ---------- U8 กรอง user_status=ACTIVE เรียง last_login desc : 200
+GET {{base}}?user_status=ACTIVE&sort=last_login&order=desc&limit=5
+Authorization: Bearer {{tokenA}}
+
+### ---------- U9 sort ที่ไม่อนุญาต : 400 (parsePagination กลางของระบบ)
+GET {{base}}?sort=email_password
+Authorization: Bearer {{tokenA}}
+
+### ---------- U10 หน้าเกินจำนวนจริง : 200 rows ว่าง total ถูกต้อง
+GET {{base}}?page=9999
+Authorization: Bearer {{tokenA}}
+
+### ---------- U11 ดูรายคน : 200
+GET {{base}}/{{tstId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- U12 ไม่มีผู้ใช้ : 404
+GET {{base}}/999999
+Authorization: Bearer {{tokenA}}
+
+### ---------- U13 id ไม่ใช่ตัวเลข : 400
+GET {{base}}/abc
+Authorization: Bearer {{tokenA}}
+
+### ---------- U14 เลื่อน tstId เป็น STAFF : 200, role=STAFF
+PUT {{base}}/{{tstId}}/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "role": "STAFF" }
+
+### ---------- U15 role ไม่ถูกต้อง : 400
+PUT {{base}}/{{tstId}}/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "role": "BOSS" }
+
+### ---------- U16 ไม่ส่ง body : 400
+PUT {{base}}/{{tstId}}/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{}
+
+### ---------- U17 แก้ role ตัวเอง (selfId) : 400 ข้อความ "ไม่สามารถเปลี่ยน...ตัวเองได้"
+PUT {{base}}/{{selfId}}/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "role": "USER" }
+
+### ---------- U18 ระงับตัวเอง (selfId) : 400
+PUT {{base}}/{{selfId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "SUSPENDED" }
+
+### ---------- U19 นักศึกษาพยายามเลื่อนตัวเองเป็น ADMIN : 403 (requireRole)
+PUT {{base}}/{{studentId}}/role
+Authorization: Bearer {{tokenU}}
+Content-Type: application/json
+
+{ "role": "ADMIN" }
+
+### ---------- U20 เปลี่ยน role ผู้ใช้ที่ไม่มี : 404
+PUT {{base}}/999999/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "role": "USER" }
+
+### ---------- U21 คืน tstId เป็น USER : 200
+PUT {{base}}/{{tstId}}/role
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "role": "USER" }
+
+### ---------- U22 สถานะไม่ถูกต้อง : 400
+PUT {{base}}/{{tstId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "BANNED" }
+
+### ---------- U23 ระงับผู้ใช้ที่มีรายการ active (activeUserId) : 409 ข้อความ "ยังมีรายการ..."
+PUT {{base}}/{{activeUserId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "SUSPENDED" }
+
+### ---------- U24 ระงับ tstId : 200, user_status=SUSPENDED
+PUT {{base}}/{{tstId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "SUSPENDED" }
+
+### ---------- U25 ระงับนักศึกษา studentId (ต้องไม่มีรายการ active) : 200 แล้วข้อ U26 ต้องใช้ API ไม่ได้
+PUT {{base}}/{{studentId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "SUSPENDED" }
+
+### ---------- U26 นักศึกษาที่ถูกระงับเรียก API : 403 ข้อความ "Account is SUSPENDED" (ต่างจาก U3 ที่เป็น "You do not have permission")
+GET {{base}}/options
+Authorization: Bearer {{tokenU}}
+
+### ---------- U27 เปิดใช้งานนักศึกษากลับ : 200, user_status=ACTIVE
+PUT {{base}}/{{studentId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "ACTIVE" }
+
+### ---------- U28 นักศึกษากลับมาผ่านด่านล็อกอินได้ : 403 ข้อความ "You do not have permission" (ไม่ใช่ Account is SUSPENDED)
+GET {{base}}/options
+Authorization: Bearer {{tokenU}}
+
+### ---------- U29 ตั้งสถานะเดิมซ้ำ : 200 (ไม่เปลี่ยน ไม่ error)
+PUT {{base}}/{{studentId}}/status
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "status": "ACTIVE" }
