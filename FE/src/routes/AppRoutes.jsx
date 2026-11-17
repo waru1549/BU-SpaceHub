@@ -17,7 +17,7 @@ const Printers = lazy(() => import('../pages/Printers.jsx'));
 const Equipment = lazy(() => import('../pages/Equipment.jsx'));
 const Maintenance = lazy(() => import('../pages/Maintenance.jsx'));
 const StaffRequests = lazy(() => import('../pages/StaffRequests.jsx'));
-// const AdminUsers = lazy(() => import('../pages/AdminUsers.jsx'));
+const AdminUsers = lazy(() => import('../pages/AdminUsers.jsx'));
 const AdminResources = lazy(() => import('../pages/AdminResources.jsx'));
 const AdminResourceSchedules = lazy(() => import("../pages/AdminResourceSchedules.jsx"));
 const Chat = lazy(() => import('../pages/Chat.jsx'));
@@ -60,7 +60,7 @@ export default function AppRoutes() {
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
-                {/* <Route path="/admin/users" element={<AdminUsers />} /> */}
+                <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/resources/:id/schedules" element={<AdminResourceSchedules />} />
                 <Route path="/admin/resources" element={<AdminResources />} />
               </Route>
