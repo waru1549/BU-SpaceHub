@@ -37,7 +37,7 @@ const systemPrompt = () => `คุณคือ "น้องสเปซ" ผู
 const callGroq = async (messages, { useTools }) => {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new AppError('ระบบ AI ยังไม่ได้ตั้งค่า', 503);
-  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -87,7 +87,7 @@ const truncate = (obj) => {
 // วนเรียก LLM จนได้คำตอบ: LLM ขอ tool -> เรา execute (whitelist) -> ส่งผลกลับ
 const runConversation = async (messages) => {
   const evidence = [];
-  let model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  let model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
   let retried = false;
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
@@ -182,3 +182,4 @@ export const logRateLimited = (question, ctx) =>
     question: (String(question ?? '').trim() || '(ว่าง)').slice(0, 1000),
     evidence: [], status: 'RATE_LIMITED', started: Date.now(),
   }));
+

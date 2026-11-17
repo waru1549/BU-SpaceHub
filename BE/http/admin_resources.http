@@ -1,0 +1,240 @@
+# =====================================================================
+# BU SpaceHub - ทดสอบ API Admin จัดการทรัพยากร (Step A2) | ใช้ BE/http/.env เดียวกัน
+#   TOKEN_A = Admin   TOKEN_U = นักศึกษา (ใช้ทดสอบสิทธิ์)
+# ข้อมูลทดสอบใช้รหัสขึ้นต้น TST- ทั้งหมด | เสร็จแล้วรัน cleanup_admin_resources.sql
+# ขั้นก่อนเริ่ม: รัน cleanup_admin_resources.sql ข้อ (1) เพื่อหา @histId และ @activeId แล้วใส่ด้านล่าง
+# ค่า @resId, @prnId, @slotId ให้คัดลอกจาก response ของข้อที่ระบุแล้วแก้ตัวเลขด้านล่างเอง
+# =====================================================================
+
+@base = http://localhost:5000/api/admin/resources
+@tokenA = {{$dotenv TOKEN_A}}
+@tokenU = {{$dotenv TOKEN_U}}
+@dFrom = {{$datetime "YYYY-MM-DD" 1 d}}
+@dTo = {{$datetime "YYYY-MM-DD" 15 d}}
+
+@resId = 43
+@prnId = 44
+@slotId = 414
+@histId = 6
+@activeId = 1
+
+### ---------- A1 ตัวเลือกฟอร์ม : 200, categories 4 หมวด, statuses 6 ค่า, settable_statuses 4 ค่า
+GET {{base}}/options
+Authorization: Bearer {{tokenA}}
+
+### ---------- A2 ไม่แนบ token : 401
+GET {{base}}
+
+### ---------- A3 นักศึกษา : 403
+GET {{base}}
+Authorization: Bearer {{tokenU}}
+
+### ---------- A4 รายการ (ค่าเริ่มต้น) : 200, meta มี total/page/limit/totalPages, เรียงตาม resource_code, มี history_count/active_count/upcoming_slots
+GET {{base}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A5 ค้นหา q=ห้อง : 200, เฉพาะที่ชื่อ/รหัส/สถานที่มีคำว่า "ห้อง"
+GET {{base}}?q=ห้อง
+Authorization: Bearer {{tokenA}}
+
+### ---------- A6 กรองหมวด PRINTER + เรียงตามชื่อ : 200, ทุกแถว category=PRINTER
+GET {{base}}?category=PRINTER&sort=resource_name&order=asc
+Authorization: Bearer {{tokenA}}
+
+### ---------- A7 กรองสถานะ + เรียงความจุมาก->น้อย + แบ่งหน้า : 200, limit=5
+GET {{base}}?resource_status=AVAILABLE&sort=capacity&order=desc&page=1&limit=5
+Authorization: Bearer {{tokenA}}
+
+### ---------- A8 หมวดไม่ถูกต้อง : 400
+GET {{base}}?category=HACK
+Authorization: Bearer {{tokenA}}
+
+### ---------- A9 sort ที่ไม่อนุญาต : 400 (parsePagination กลางของระบบปฏิเสธคอลัมน์ที่ไม่อยู่ใน whitelist)
+GET {{base}}?sort=password
+Authorization: Bearer {{tokenA}}
+
+### ---------- A10 เพิ่มห้อง : 201, resource_id ใหม่ (คัดลอกไปใส่ @resId), category=ROOM, status=AVAILABLE
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A", "type_id": 1, "location": "ตึกทดสอบ ชั้น 1", "capacity": 12, "description": "ห้องสำหรับทดสอบ" }
+
+### ---------- A11 รหัสซ้ำ (ตัวพิมพ์เล็ก) : 409
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "tst-room-a", "resource_name": "ซ้ำ", "type_id": 1, "capacity": 5 }
+
+### ---------- A12 รหัสมีช่องว่าง : 400
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST ROOM", "resource_name": "ชื่อ", "type_id": 1, "capacity": 5 }
+
+### ---------- A13 ห้องไม่ใส่ความจุ : 400 "ห้องต้องระบุความจุ"
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-B", "resource_name": "ไม่มีความจุ", "type_id": 1 }
+
+### ---------- A14 อุปกรณ์ไม่ใส่จำนวน : 400 "อุปกรณ์ต้องระบุจำนวน"
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-EQ-B", "resource_name": "ไม่มีจำนวน", "type_id": 3 }
+
+### ---------- A15 เพิ่มเครื่องพิมพ์ : 201 (คัดลอก resource_id ไปใส่ @prnId)
+POST {{base}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-PRN-A", "resource_name": "เครื่องพิมพ์ทดสอบ A", "type_id": 2, "location": "แล็บทดสอบ" }
+
+### ---------- A16 ดูรายละเอียด : 200, ข้อมูลตรงกับข้อ A10
+GET {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A17 แก้ไข (ชื่อ/ความจุ/สถานที่) : 200, ค่าใหม่ถูกบันทึก, category ยังเป็น ROOM
+PUT {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A (แก้แล้ว)", "location": "ตึกทดสอบ ชั้น 2", "capacity": 20, "description": "แก้ไขแล้ว", "status": "AVAILABLE" }
+
+### ---------- A18 พยายามเปลี่ยนหมวดหมู่ : 400 "ไม่สามารถเปลี่ยนหมวดหมู่ได้"
+PUT {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A", "type_id": 2, "capacity": 20 }
+
+### ---------- A19 ตั้งสถานะ RESERVED เอง : 400
+PUT {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A", "capacity": 20, "status": "RESERVED" }
+
+### ---------- A20 ตั้งสถานะ BROKEN : 200, resource_status=BROKEN
+PUT {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A", "capacity": 20, "status": "BROKEN" }
+
+### ---------- A20b ตั้งกลับเป็น AVAILABLE : 200
+PUT {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "resource_code": "TST-ROOM-A", "resource_name": "ห้องทดสอบ A", "capacity": 20, "status": "AVAILABLE" }
+
+### ---------- A21 สร้างตารางเวลาเป็นชุด (จ-ศ, 2 ช่วง/วัน, พรุ่งนี้ถึง +15 วัน) : 201, inserted > 0, skipped = 0
+POST {{base}}/{{resId}}/schedules/generate
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "date_from": "{{dFrom}}", "date_to": "{{dTo}}", "weekdays": [1,2,3,4,5], "slots": [ {"start":"09:00","end":"11:00"}, {"start":"13:00","end":"15:00"} ], "max_slots": 1 }
+
+### ---------- A22 สร้างซ้ำ : 201, inserted = 0, skipped = จำนวนเดิม
+POST {{base}}/{{resId}}/schedules/generate
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "date_from": "{{dFrom}}", "date_to": "{{dTo}}", "weekdays": [1,2,3,4,5], "slots": [ {"start":"09:00","end":"11:00"}, {"start":"13:00","end":"15:00"} ], "max_slots": 1 }
+
+### ---------- A23 ช่วงเวลาซ้อนกันเอง : 400
+POST {{base}}/{{resId}}/schedules/generate
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "date_from": "{{dFrom}}", "date_to": "{{dTo}}", "weekdays": [1], "slots": [ {"start":"09:00","end":"11:00"}, {"start":"10:00","end":"12:00"} ] }
+
+### ---------- A23b วันที่ย้อนหลัง : 400 "วันที่เริ่มต้องไม่ย้อนหลัง"
+POST {{base}}/{{resId}}/schedules/generate
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "date_from": "2020-01-01", "date_to": "2020-01-07", "weekdays": [1], "slots": [ {"start":"09:00","end":"11:00"} ] }
+
+### ---------- A24 ดูตารางเวลา : 200, มี meta, เรียงตามวันที่/เวลา (คัดลอก schedule_id ของแถวแรกไปใส่ @slotId)
+GET {{base}}/{{resId}}/schedules?limit=10
+Authorization: Bearer {{tokenA}}
+
+### ---------- A25 บล็อกช่วงเวลา : 200, schedule_status=BLOCKED
+POST {{base}}/{{resId}}/schedules/ROOM/{{slotId}}/block
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "blocked": true }
+
+### ---------- A25b ถามน้องสเปซ (หน้า /chat) ว่ามีห้อง "ห้องทดสอบ A" ว่างไหม : ช่วงที่ถูกบล็อกต้องไม่ถูกแสดงว่าว่าง (ทดสอบด้วยมือ ไม่ต้องรัน request นี้)
+
+### ---------- A26 ปลดบล็อก : 200, AVAILABLE
+POST {{base}}/{{resId}}/schedules/ROOM/{{slotId}}/block
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "blocked": false }
+
+### ---------- A27 blocked ไม่ใช่ boolean : 400
+POST {{base}}/{{resId}}/schedules/ROOM/{{slotId}}/block
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "blocked": "yes" }
+
+### ---------- A28 ชนิดผิด : 400
+POST {{base}}/{{resId}}/schedules/HACK/{{slotId}}/block
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "blocked": true }
+
+### ---------- A29 ช่วงเวลาของทรัพยากรอื่น (ใช้ @prnId กับ @slotId ของห้อง) : 404
+POST {{base}}/{{prnId}}/schedules/ROOM/{{slotId}}/block
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{ "blocked": true }
+
+### ---------- A30 ลบช่วงเวลา : 200
+DELETE {{base}}/{{resId}}/schedules/ROOM/{{slotId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A30b ลบซ้ำ : 404
+DELETE {{base}}/{{resId}}/schedules/ROOM/{{slotId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A31 ลบเครื่องพิมพ์ที่ไม่มีประวัติ : 200, result=DELETED
+DELETE {{base}}/{{prnId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A32 ลบห้อง TST (มีตารางเวลาแต่ไม่มีประวัติ) : 200, result=DELETED และตารางเวลาหายไปด้วย
+DELETE {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A32b ดูห้องที่ลบแล้ว : 404
+GET {{base}}/{{resId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A33 ลบทรัพยากรที่มีประวัติ (ใช้ @histId จาก SQL) : 200, result=DEACTIVATED, resource.resource_status=OUT_OF_SERVICE (หลังข้อนี้ต้องรัน SQL คืนสถานะ ใน cleanup ข้อ 3)
+DELETE {{base}}/{{histId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A34 ลบทรัพยากรที่มีงานค้าง (ใช้ @activeId จาก SQL) : 409
+DELETE {{base}}/{{activeId}}
+Authorization: Bearer {{tokenA}}
+
+### ---------- A35 ลบทรัพยากรที่ไม่มีอยู่ : 404
+DELETE {{base}}/999999
+Authorization: Bearer {{tokenA}}
+
+### ---------- A36 id ไม่ใช่ตัวเลข : 400
+GET {{base}}/abc
+Authorization: Bearer {{tokenA}}
