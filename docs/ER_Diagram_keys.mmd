@@ -1,0 +1,129 @@
+erDiagram
+    user_roles ||--o{ users : "role_id"
+    resource_status ||--o{ resources : "resource_status_id"
+    resource_categories ||--o{ resources : "type_id"
+    resources ||--o{ room_schedules : "resource_id"
+    schedule_status ||--o{ room_schedules : "schedule_status_id"
+    booking_status ||--o{ room_bookings : "booking_status_id"
+    room_schedules ||--o{ room_bookings : "schedule_id"
+    users ||--o{ room_bookings : "user_id"
+    booking_actions ||--o{ room_booking_history : "action_id"
+    room_bookings ||--o{ room_booking_history : "booking_id"
+    resources ||--o{ printer_schedules : "resource_id"
+    schedule_status ||--o{ printer_schedules : "schedule_status_id"
+    booking_status ||--o{ printer_bookings : "booking_status_id"
+    printer_schedules ||--o{ printer_bookings : "schedule_id"
+    users ||--o{ printer_bookings : "user_id"
+    booking_actions ||--o{ printer_booking_history : "action_id"
+    printer_bookings ||--o{ printer_booking_history : "booking_id"
+    booking_status ||--o{ equipment_bookings : "booking_status_id"
+    resources ||--o{ equipment_bookings : "resource_id"
+    users ||--o{ equipment_bookings : "user_id"
+    booking_actions ||--o{ equipment_booking_history : "action_id"
+    equipment_bookings ||--o{ equipment_booking_history : "booking_id"
+    equipment_bookings ||--o{ fines : "booking_id"
+    users ||--o{ maintenance_bookings : "assigned_to"
+    booking_status ||--o{ maintenance_bookings : "booking_status_id"
+    resources ||--o{ maintenance_bookings : "resource_id"
+    users ||--o{ maintenance_bookings : "user_id"
+    booking_actions ||--o{ maintenance_booking_history : "action_id"
+    maintenance_bookings ||--o{ maintenance_booking_history : "booking_id"
+    maintenance_bookings ||--o{ attachments : "booking_id"
+    users ||--o{ chat_logs : "user_id"
+    ai_knowledge {
+        smallint topic_id PK
+    }
+    attachments {
+        bigint attachment_id PK
+        bigint booking_id FK
+    }
+    booking_actions {
+        smallint action_id PK
+    }
+    booking_status {
+        smallint booking_status_id PK
+    }
+    chat_logs {
+        bigint chat_id PK
+        bigint user_id FK
+    }
+    equipment_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+    }
+    equipment_bookings {
+        bigint booking_id PK
+        bigint user_id FK
+        bigint resource_id FK
+        smallint booking_status_id FK
+    }
+    fines {
+        bigint fine_id PK
+        bigint booking_id FK
+    }
+    maintenance_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+    }
+    maintenance_bookings {
+        bigint booking_id PK
+        bigint user_id FK
+        bigint resource_id FK
+        smallint booking_status_id FK
+        bigint assigned_to FK
+    }
+    printer_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+    }
+    printer_bookings {
+        bigint booking_id PK
+        bigint user_id FK
+        bigint schedule_id FK
+        smallint booking_status_id FK
+    }
+    printer_schedules {
+        bigint schedule_id PK
+        bigint resource_id FK
+        smallint schedule_status_id FK
+    }
+    resource_categories {
+        smallint type_id PK
+    }
+    resource_status {
+        smallint resource_status_id PK
+    }
+    resources {
+        bigint resource_id PK
+        smallint type_id FK
+        smallint resource_status_id FK
+    }
+    room_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+    }
+    room_bookings {
+        bigint booking_id PK
+        bigint user_id FK
+        bigint schedule_id FK
+        smallint booking_status_id FK
+    }
+    room_schedules {
+        bigint schedule_id PK
+        bigint resource_id FK
+        smallint schedule_status_id FK
+    }
+    schedule_status {
+        smallint schedule_status_id PK
+    }
+    user_roles {
+        smallint role_id PK
+    }
+    users {
+        bigint user_id PK
+        smallint role_id FK
+    }

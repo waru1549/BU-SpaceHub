@@ -1,0 +1,213 @@
+erDiagram
+    user_roles ||--o{ users : "role_id"
+    resource_status ||--o{ resources : "resource_status_id"
+    resource_categories ||--o{ resources : "type_id"
+    resources ||--o{ room_schedules : "resource_id"
+    schedule_status ||--o{ room_schedules : "schedule_status_id"
+    booking_status ||--o{ room_bookings : "booking_status_id"
+    room_schedules ||--o{ room_bookings : "schedule_id"
+    users ||--o{ room_bookings : "user_id"
+    booking_actions ||--o{ room_booking_history : "action_id"
+    room_bookings ||--o{ room_booking_history : "booking_id"
+    resources ||--o{ printer_schedules : "resource_id"
+    schedule_status ||--o{ printer_schedules : "schedule_status_id"
+    booking_status ||--o{ printer_bookings : "booking_status_id"
+    printer_schedules ||--o{ printer_bookings : "schedule_id"
+    users ||--o{ printer_bookings : "user_id"
+    booking_actions ||--o{ printer_booking_history : "action_id"
+    printer_bookings ||--o{ printer_booking_history : "booking_id"
+    booking_status ||--o{ equipment_bookings : "booking_status_id"
+    resources ||--o{ equipment_bookings : "resource_id"
+    users ||--o{ equipment_bookings : "user_id"
+    booking_actions ||--o{ equipment_booking_history : "action_id"
+    equipment_bookings ||--o{ equipment_booking_history : "booking_id"
+    equipment_bookings ||--o{ fines : "booking_id"
+    users ||--o{ maintenance_bookings : "assigned_to"
+    booking_status ||--o{ maintenance_bookings : "booking_status_id"
+    resources ||--o{ maintenance_bookings : "resource_id"
+    users ||--o{ maintenance_bookings : "user_id"
+    booking_actions ||--o{ maintenance_booking_history : "action_id"
+    maintenance_bookings ||--o{ maintenance_booking_history : "booking_id"
+    maintenance_bookings ||--o{ attachments : "booking_id"
+    users ||--o{ chat_logs : "user_id"
+    ai_knowledge {
+        smallint topic_id PK
+        text topic_key
+        text category
+        text title
+        text content
+        text[] keywords
+    }
+    attachments {
+        bigint attachment_id PK
+        bigint booking_id FK
+        varchar file_name
+        text file_path
+        timestamptz upload_date
+    }
+    booking_actions {
+        smallint action_id PK
+        varchar action_name
+    }
+    booking_status {
+        smallint booking_status_id PK
+        varchar booking_status_name
+    }
+    chat_logs {
+        bigint chat_id PK
+        bigint user_id FK
+        text question
+        text answer
+        varchar tool_name
+        text sql_used
+        int result_rows
+        varchar chat_status
+        text error_message
+        int response_ms
+        timestamptz created_at
+        text session_id
+        text ip_hash
+        text model
+        jsonb tools_used
+    }
+    equipment_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+        timestamptz action_date
+    }
+    equipment_bookings {
+        bigint booking_id PK
+        varchar booking_code
+        bigint user_id FK
+        bigint resource_id FK
+        timestamptz borrow_date
+        timestamptz expected_return_date
+        timestamptz actual_return_date
+        smallint booking_status_id FK
+        text borrow_purpose
+    }
+    fines {
+        bigint fine_id PK
+        bigint booking_id FK
+        numeric fine_amount
+        varchar fine_reason
+        varchar fine_status
+    }
+    maintenance_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+        timestamptz action_date
+    }
+    maintenance_bookings {
+        bigint booking_id PK
+        varchar booking_code
+        bigint user_id FK
+        bigint resource_id FK
+        timestamptz booking_time
+        smallint booking_status_id FK
+        varchar repair_title
+        text repair_description
+        timestamptz reported_date
+        text staff_note
+        varchar location_text
+        bigint assigned_to FK
+        timestamptz assigned_at
+        timestamptz started_at
+        timestamptz completed_at
+    }
+    printer_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+        timestamptz action_date
+    }
+    printer_bookings {
+        bigint booking_id PK
+        varchar booking_code
+        bigint user_id FK
+        bigint schedule_id FK
+        timestamptz booking_time
+        smallint booking_status_id FK
+        text print_purpose
+        varchar material
+        numeric est_weight_g
+    }
+    printer_schedules {
+        bigint schedule_id PK
+        bigint resource_id FK
+        date work_date
+        time start_time
+        time end_time
+        int max_slots
+        smallint schedule_status_id FK
+        timestamptz created_at
+    }
+    resource_categories {
+        smallint type_id PK
+        varchar type_name
+    }
+    resource_status {
+        smallint resource_status_id PK
+        varchar resource_status_name
+    }
+    resources {
+        bigint resource_id PK
+        varchar resource_code
+        varchar resource_name
+        smallint type_id FK
+        varchar location
+        smallint resource_status_id FK
+        int capacity
+        int quantity
+        text description
+        timestamptz created_at
+    }
+    room_booking_history {
+        bigint history_id PK
+        bigint booking_id FK
+        smallint action_id FK
+        timestamptz action_date
+    }
+    room_bookings {
+        bigint booking_id PK
+        varchar booking_code
+        bigint user_id FK
+        bigint schedule_id FK
+        timestamptz booking_time
+        smallint booking_status_id FK
+        text booking_purpose
+    }
+    room_schedules {
+        bigint schedule_id PK
+        bigint resource_id FK
+        date work_date
+        time start_time
+        time end_time
+        int max_slots
+        smallint schedule_status_id FK
+        timestamptz created_at
+    }
+    schedule_status {
+        smallint schedule_status_id PK
+        varchar schedule_status_name
+    }
+    user_roles {
+        smallint role_id PK
+        varchar role_name
+    }
+    users {
+        bigint user_id PK
+        uuid auth_user_id
+        varchar user_code
+        varchar google_id
+        varchar university_id
+        varchar full_name
+        varchar email
+        varchar phone
+        smallint role_id FK
+        varchar user_status
+        timestamptz created_at
+        timestamptz last_login
+    }
